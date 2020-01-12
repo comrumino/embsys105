@@ -32,7 +32,7 @@ void GenerateFault()
 
     /* TODO: Modify the code to cause a data fetch bus fault by reading */
     /* memory at an invalid address. */
-    int *a = (int*) 0x20000000;
+    int *a = (int*) 0xDEADBEAF;
     int b = *a;
     b = b; // This line just avoids a compiler warning
 
