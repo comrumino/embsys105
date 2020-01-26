@@ -33,8 +33,7 @@ EXC_RETURN_THREAD_MODE EQU 0xFFFFFFF9
  */
 TaskSwitch
     // Disable interrupts
-    MOV R3, #1
-    MSR PRIMASK, R3
+    CPSID I
     
     // Save registers R4-R11 using register SP
     PUSH {R4, R5, R6, R7, R8, R9, R10, R11}
@@ -60,8 +59,7 @@ TaskSwitch
     LDR R14,=EXC_RETURN_THREAD_MODE
     
     // Enable interrupts
-    MOV R3, #0
-    MSR PRIMASK, R3
+    CPSIE I
 
     // Branch using LR to return from exception while atomically restoring 
     // registers R0-R3, R12, LR, PC and xPSR
