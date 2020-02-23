@@ -1,8 +1,8 @@
-/*************************************************** 
+/***************************************************
   This is a library for the Adafruit Capacitive Touch Screens
 
   ----> http://www.adafruit.com/products/1947
- 
+
   Check out the links above for our tutorials and wiring diagrams
   This chipset uses I2C to communicate
 
@@ -21,17 +21,16 @@
 #include <stdint.h>
 
 #ifndef boolean
-    #define boolean bool
+#define boolean bool
 #endif
 
-
-#define FT6206_ADDR           0x38
-#define FT6206_ADDR_7BIT      (FT6206_ADDR<<1) // first 7 of 8 bits specify address, shift left
-#define FT6206_G_FT5201ID     0xA8
+#define FT6206_ADDR 0x38
+#define FT6206_ADDR_7BIT (FT6206_ADDR << 1) // first 7 of 8 bits specify address, shift left
+#define FT6206_G_FT5201ID 0xA8
 #define FT6206_REG_NUMTOUCHES 0x02
 
-#define FT6206_NUM_X             0x33
-#define FT6206_NUM_Y             0x34
+#define FT6206_NUM_X 0x33
+#define FT6206_NUM_Y 0x34
 
 #define FT6206_REG_MODE 0x00
 #define FT6206_REG_CALIBRATE 0x02
@@ -47,39 +46,37 @@
 #define FT6206_DEFAULT_THRESSHOLD 128
 
 class TS_Point {
- public:
-  TS_Point(void);
-  TS_Point(int16_t x, int16_t y, int16_t z);
-  
-  bool operator==(TS_Point);
-  bool operator!=(TS_Point);
+  public:
+    TS_Point(void);
+    TS_Point(int16_t x, int16_t y, int16_t z);
 
-  int16_t x, y, z;
+    bool operator==(TS_Point);
+    bool operator!=(TS_Point);
+
+    int16_t x, y, z;
 };
 
 class Adafruit_FT6206 {
- public:
+  public:
+    Adafruit_FT6206(void);
+    boolean begin(uint8_t thresh = FT6206_DEFAULT_THRESSHOLD);
+    void setPjdfHandle(HANDLE handle);
 
-  Adafruit_FT6206(void);
-  boolean begin(uint8_t thresh = FT6206_DEFAULT_THRESSHOLD);  
-  void setPjdfHandle(HANDLE handle);
+    void writeRegister8(uint8_t reg, uint8_t val);
+    uint8_t readRegister8(uint8_t reg);
 
-  void writeRegister8(uint8_t reg, uint8_t val);
-  uint8_t readRegister8(uint8_t reg);
+    void readData(uint16_t *x, uint16_t *y);
+    void autoCalibrate(void);
 
-  void readData(uint16_t *x, uint16_t *y);
-  void autoCalibrate(void); 
+    boolean touched(void);
+    TS_Point getPoint(void);
 
-  boolean touched(void);
-  TS_Point getPoint(void);
-
- private:
-  HANDLE hPJDF{0};
-  uint8_t touches{0};
-  uint16_t touchX[2] = {};
-  uint16_t touchY[2] = {};
-  uint16_t touchID[2] = {};
-
+  private:
+    HANDLE hPJDF{0};
+    uint8_t touches{0};
+    uint16_t touchX[2] = {};
+    uint16_t touchY[2] = {};
+    uint16_t touchID[2] = {};
 };
 
-#endif //ADAFRUIT_FT6206_LIBRARY
+#endif // ADAFRUIT_FT6206_LIBRARY

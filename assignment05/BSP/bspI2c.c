@@ -7,36 +7,35 @@
     Source: https://community.st.com/s/question/0D50X00009XkiM9SAJ/proper-initialization-of-the-i2c-peripheral
 
     Adapted for University of Washington embedded systems programming certificate
-    
+
     2016/2 Nick Strathy adapted it
 */
 
+#include "bspI2c.h"
 #include <stm32f4xx.h>
 #include <stm32f4xx_i2c.h>
-#include "bspI2c.h"
-
 
 // Initializes the I2C1 memory mapped registers and enables the interface
-void I2C1_init(void){
-	
-	GPIO_InitTypeDef GPIO_InitStruct;
-	I2C_InitTypeDef I2C_InitStruct;
-	
+void I2C1_init(void) {
+
+    GPIO_InitTypeDef GPIO_InitStruct;
+    I2C_InitTypeDef I2C_InitStruct;
+
     // TODO:
-	// enable APB1 peripheral clock for I2C1
+    // enable APB1 peripheral clock for I2C1
     RCC_APB1PeriphClockCmd(RCC_APB1Periph_I2C1, ENABLE);
-    
-	// enable clock for SCL and SDA pins
+
+    // enable clock for SCL and SDA pins
     RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOB, ENABLE);
-	
-	/* setup SCL and SDA pins
-	 * You can connect the I2C1 functions to two different
-	 * pins:
-	 * 1. SCL on PB6 or PB8  
-	 * 2. SDA on PB7 or PB9
-         * We will use SCL on PB8 and SDA on PB9 below
-	 */
-    
+
+    /* setup SCL and SDA pins
+     * You can connect the I2C1 functions to two different
+     * pins:
+     * 1. SCL on PB6 or PB8
+     * 2. SDA on PB7 or PB9
+     * We will use SCL on PB8 and SDA on PB9 below
+     */
+
     // Initialize GPIO_InitStruct (declared above) as follows
     // Set pins 8 and 9.
     GPIO_InitStruct.GPIO_Pin = GPIO_Pin_8 | GPIO_Pin_9;
@@ -51,11 +50,11 @@ void I2C1_init(void){
     // Call GPIO_Init() to initialize GPIOB with GPIO_InitStruct
     GPIO_Init(GPIOB, &GPIO_InitStruct);
 
-	// Connect I2C1 pins to AF:
+    // Connect I2C1 pins to AF:
     GPIO_PinAFConfig(GPIOB, GPIO_PinSource8, GPIO_AF_I2C1);
     GPIO_PinAFConfig(GPIOB, GPIO_PinSource9, GPIO_AF_I2C1);
 
-	// Configure I2C1 by initializing I2C_InitStruct (declared above) as follows:
+    // Configure I2C1 by initializing I2C_InitStruct (declared above) as follows:
     // set clock speed to 100000 (100 kHz)
     I2C_InitStruct.I2C_ClockSpeed = 100000;
     // set mode to I2C mode
@@ -70,14 +69,14 @@ void I2C1_init(void){
     I2C_InitStruct.I2C_AcknowledgedAddress = I2C_AcknowledgedAddress_7bit;
     // Then call I2C_Init() to initialize I2C1 with I2C_InitStruct
     I2C_Init(I2C1, &I2C_InitStruct);
-	
-	// enable I2C1
+
+    // enable I2C1
     I2C_Cmd(I2C1, ENABLE);
 }
 
-/* This function issues a start condition and 
+/* This function issues a start condition and
  * transmits the slave address + R/W bit
- * 
+ *
  * Parameters:
  * 		I2Cx --> the I2C peripheral e.g. I2C1
  * 		address --> the 7 bit slave address
@@ -85,83 +84,90 @@ void I2C1_init(void){
  * 						I2C_Direction_Tranmitter for Master transmitter mode
  * 						I2C_Direction_Receiver for Master receiver
  */
-void I2C_start(I2C_TypeDef* I2Cx, uint8_t address, uint8_t direction){
-	// wait until I2C1 is not busy any more
-	while(I2C_GetFlagStatus(I2Cx, I2C_FLAG_BUSY));
-  
-	// Send I2C1 START condition 
-	I2C_GenerateSTART(I2Cx, ENABLE);
-	  
-	// wait for I2C1 EV5 --> Slave has acknowledged start condition
-	while(!I2C_CheckEvent(I2Cx, I2C_EVENT_MASTER_MODE_SELECT));
-		
-	// Send slave Address for write 
-	I2C_Send7bitAddress(I2Cx, address, direction);
-	  
-	/* wait for I2Cx EV6, check if 
-	 * either Slave has acknowledged Master transmitter or
-	 * Master receiver mode, depending on the transmission
-	 * direction
-	 */ 
-	if(direction == I2C_Direction_Transmitter){
-		while(!I2C_CheckEvent(I2Cx, I2C_EVENT_MASTER_TRANSMITTER_MODE_SELECTED));
-	}
-	else if(direction == I2C_Direction_Receiver){
-		while(!I2C_CheckEvent(I2Cx, I2C_EVENT_MASTER_RECEIVER_MODE_SELECTED));
-	}
+void I2C_start(I2C_TypeDef *I2Cx, uint8_t address, uint8_t direction) {
+    // wait until I2C1 is not busy any more
+    while (I2C_GetFlagStatus(I2Cx, I2C_FLAG_BUSY))
+        ;
+
+    // Send I2C1 START condition
+    I2C_GenerateSTART(I2Cx, ENABLE);
+
+    // wait for I2C1 EV5 --> Slave has acknowledged start condition
+    while (!I2C_CheckEvent(I2Cx, I2C_EVENT_MASTER_MODE_SELECT))
+        ;
+
+    // Send slave Address for write
+    I2C_Send7bitAddress(I2Cx, address, direction);
+
+    /* wait for I2Cx EV6, check if
+     * either Slave has acknowledged Master transmitter or
+     * Master receiver mode, depending on the transmission
+     * direction
+     */
+    if (direction == I2C_Direction_Transmitter) {
+        while (!I2C_CheckEvent(I2Cx, I2C_EVENT_MASTER_TRANSMITTER_MODE_SELECTED))
+            ;
+    } else if (direction == I2C_Direction_Receiver) {
+        while (!I2C_CheckEvent(I2Cx, I2C_EVENT_MASTER_RECEIVER_MODE_SELECTED))
+            ;
+    }
 }
 
 /* This function transmits one byte to the slave device
  * Parameters:
- *		I2Cx --> the I2C peripheral e.g. I2C1 
+ *		I2Cx --> the I2C peripheral e.g. I2C1
  *		data --> the data byte to be transmitted
  */
-void I2C_write(I2C_TypeDef* I2Cx, uint8_t data)
-{
-	// wait for I2C1 EV8 --> last byte is still being transmitted (last byte in SR, buffer empty), next byte can already be written
-	while(!I2C_CheckEvent(I2Cx, I2C_EVENT_MASTER_BYTE_TRANSMITTING));
-	I2C_SendData(I2Cx, data);
-	while(!I2C_CheckEvent(I2Cx, I2C_EVENT_MASTER_BYTE_TRANSMITTED));
-}
-
-/* This function reads one byte from the slave device 
- * and acknowledges the byte (requests another byte)
- */
-uint8_t I2C_read_ack(I2C_TypeDef* I2Cx){
-	// enable acknowledge of received data
-	I2C_AcknowledgeConfig(I2Cx, ENABLE);
-	// wait until one byte has been received
-	while( !I2C_CheckEvent(I2Cx, I2C_EVENT_MASTER_BYTE_RECEIVED) );
-	// read data from I2C data register and return data byte
-	uint8_t data = I2C_ReceiveData(I2Cx);
-	return data;
+void I2C_write(I2C_TypeDef *I2Cx, uint8_t data) {
+    // wait for I2C1 EV8 --> last byte is still being transmitted (last byte in SR, buffer empty), next byte can already
+    // be written
+    while (!I2C_CheckEvent(I2Cx, I2C_EVENT_MASTER_BYTE_TRANSMITTING))
+        ;
+    I2C_SendData(I2Cx, data);
+    while (!I2C_CheckEvent(I2Cx, I2C_EVENT_MASTER_BYTE_TRANSMITTED))
+        ;
 }
 
 /* This function reads one byte from the slave device
- * and doesn't acknowledge the received data 
+ * and acknowledges the byte (requests another byte)
+ */
+uint8_t I2C_read_ack(I2C_TypeDef *I2Cx) {
+    // enable acknowledge of received data
+    I2C_AcknowledgeConfig(I2Cx, ENABLE);
+    // wait until one byte has been received
+    while (!I2C_CheckEvent(I2Cx, I2C_EVENT_MASTER_BYTE_RECEIVED))
+        ;
+    // read data from I2C data register and return data byte
+    uint8_t data = I2C_ReceiveData(I2Cx);
+    return data;
+}
+
+/* This function reads one byte from the slave device
+ * and doesn't acknowledge the received data
  * after that a STOP condition is transmitted
  */
-uint8_t I2C_read_nack(I2C_TypeDef* I2Cx){
-	// disable acknowledge of received data
-	// nack also generates stop condition after last byte received
-	// see reference manual for more info
-	I2C_AcknowledgeConfig(I2Cx, DISABLE);
-	I2C_GenerateSTOP(I2Cx, ENABLE);
-	// wait until one byte has been received
-	while( !I2C_CheckEvent(I2Cx, I2C_EVENT_MASTER_BYTE_RECEIVED) );
-	// read data from I2C data register and return data byte
-	uint8_t data = I2C_ReceiveData(I2Cx);
-	return data;
+uint8_t I2C_read_nack(I2C_TypeDef *I2Cx) {
+    // disable acknowledge of received data
+    // nack also generates stop condition after last byte received
+    // see reference manual for more info
+    I2C_AcknowledgeConfig(I2Cx, DISABLE);
+    I2C_GenerateSTOP(I2Cx, ENABLE);
+    // wait until one byte has been received
+    while (!I2C_CheckEvent(I2Cx, I2C_EVENT_MASTER_BYTE_RECEIVED))
+        ;
+    // read data from I2C data register and return data byte
+    uint8_t data = I2C_ReceiveData(I2Cx);
+    return data;
 }
 
 /* This function issues a stop condition and therefore
  * releases the bus
  */
-void I2C_stop(I2C_TypeDef* I2Cx){
-	
-	// Send I2C1 STOP Condition after last byte has been transmitted
-	I2C_GenerateSTOP(I2Cx, ENABLE);
-	// wait for I2C1 EV8_2 --> byte has been transmitted
-	while(!I2C_CheckEvent(I2Cx, I2C_EVENT_MASTER_BYTE_TRANSMITTED));
-}
+void I2C_stop(I2C_TypeDef *I2Cx) {
 
+    // Send I2C1 STOP Condition after last byte has been transmitted
+    I2C_GenerateSTOP(I2Cx, ENABLE);
+    // wait for I2C1 EV8_2 --> byte has been transmitted
+    while (!I2C_CheckEvent(I2Cx, I2C_EVENT_MASTER_BYTE_TRANSMITTED))
+        ;
+}

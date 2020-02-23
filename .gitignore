@@ -33,6 +33,7 @@
 
 Debug/
 Settings/
+settings/
 *.dep
 *.ewd
 *.pbi
