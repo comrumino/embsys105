@@ -4,6 +4,7 @@
     Board support for controlling I2C interfaces on NUCLEO-F401RE MCU
 
     Source: https://github.com/g4lvanix/STM32F4-workarea/tree/master/Project/I2C-master-example
+    Source: https://community.st.com/s/question/0D50X00009XkiM9SAJ/proper-initialization-of-the-i2c-peripheral
 
     Adapted for University of Washington embedded systems programming certificate
     
@@ -21,52 +22,57 @@ void I2C1_init(void){
 	GPIO_InitTypeDef GPIO_InitStruct;
 	I2C_InitTypeDef I2C_InitStruct;
 	
-    // TODO: Fill in missing code to initialize the I2C1 interface.
-    
+    // TODO:
 	// enable APB1 peripheral clock for I2C1
-	// <your code here>
+    RCC_APB1PeriphClockCmd(RCC_APB1Periph_I2C1, ENABLE);
     
 	// enable clock for SCL and SDA pins
-	// <your code here>
+    RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOB, ENABLE);
 	
 	/* setup SCL and SDA pins
 	 * You can connect the I2C1 functions to two different
 	 * pins:
 	 * 1. SCL on PB6 or PB8  
 	 * 2. SDA on PB7 or PB9
-         *
          * We will use SCL on PB8 and SDA on PB9 below
 	 */
     
     // Initialize GPIO_InitStruct (declared above) as follows
     // Set pins 8 and 9.
+    GPIO_InitStruct.GPIO_Pin = GPIO_Pin_8 | GPIO_Pin_9;
     // Set mode to alternate function (AF).
+    GPIO_InitStruct.GPIO_Mode = GPIO_Mode_AF;
     // Set speed to 50 MHz
+    GPIO_InitStruct.GPIO_Speed = GPIO_Speed_50MHz;
     // Set OType to open drain (OD).
+    GPIO_InitStruct.GPIO_OType = GPIO_OType_OD;
     // Set pull-up/pull-down to pull up.
+    GPIO_InitStruct.GPIO_PuPd = GPIO_PuPd_UP;
     // Call GPIO_Init() to initialize GPIOB with GPIO_InitStruct
-    
-    // <your code here for the above>
-    
+    GPIO_Init(GPIOB, &GPIO_InitStruct);
+
 	// Connect I2C1 pins to AF:
-    // Call GPIO_PinAFConfig once to set up pin 8 (SCL), once to set up pin 9 (SDA)
-    // <your code here
-    
-	// configure I2C1
-    // Initialze I2C_InitStruct (declared above) as follows:
+    GPIO_PinAFConfig(GPIOB, GPIO_PinSource8, GPIO_AF_I2C1);
+    GPIO_PinAFConfig(GPIOB, GPIO_PinSource9, GPIO_AF_I2C1);
+
+	// Configure I2C1 by initializing I2C_InitStruct (declared above) as follows:
     // set clock speed to 100000 (100 kHz)
+    I2C_InitStruct.I2C_ClockSpeed = 100000;
     // set mode to I2C mode
+    I2C_InitStruct.I2C_Mode = I2C_Mode_I2C;
     // set duty cycle to I2C_DutyCycle_2
+    I2C_InitStruct.I2C_DutyCycle = I2C_DutyCycle_2;
     // set own address to 0
+    I2C_InitStruct.I2C_OwnAddress1 = 0x0;
     // set Ack to disabled
+    I2C_InitStruct.I2C_Ack = I2C_Ack_Disable;
     // set acknowledged address to 7 bits
+    I2C_InitStruct.I2C_AcknowledgedAddress = I2C_AcknowledgedAddress_7bit;
     // Then call I2C_Init() to initialize I2C1 with I2C_InitStruct
-    
-    // <Your code here for the above>
+    I2C_Init(I2C1, &I2C_InitStruct);
 	
 	// enable I2C1
-    // Call I2C_Cmd() to enable I2C1
-	// <your code here>
+    I2C_Cmd(I2C1, ENABLE);
 }
 
 /* This function issues a start condition and 

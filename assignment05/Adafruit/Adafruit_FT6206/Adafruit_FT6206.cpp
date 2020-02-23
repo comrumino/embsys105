@@ -30,8 +30,7 @@ void delay(uint32_t);
 */
 /**************************************************************************/
 // I2C, no address adjustments or pins
-Adafruit_FT6206::Adafruit_FT6206() {
-}
+Adafruit_FT6206::Adafruit_FT6206() {}
 
 
 /**************************************************************************/
@@ -53,9 +52,7 @@ boolean Adafruit_FT6206::begin(uint8_t threshhold) {
   Serial.print("Firm V: "); Serial.println(readRegister8(FT6206_REG_FIRMVERS));
   Serial.print("Point Rate Hz: "); Serial.println(readRegister8(FT6206_REG_POINTRATE));
   Serial.print("Thresh: "); Serial.println(readRegister8(FT6206_REG_THRESHHOLD));
-  */
   // dump all registers
-  /*
   for (int16_t i=0; i<0x20; i++) {
     Serial.print("I2C $"); Serial.print(i, HEX);
     Serial.print(" = 0x"); Serial.println(readRegister8(i), HEX);
@@ -63,6 +60,9 @@ boolean Adafruit_FT6206::begin(uint8_t threshhold) {
   */
   return true;
 }
+
+void Adafruit_FT6206::setPjdfHandle(HANDLE handle) { hPJDF = handle; }
+
 
 // DONT DO THIS - REALLY - IT DOESNT WORK
 void Adafruit_FT6206::autoCalibrate(void) {
@@ -101,25 +101,13 @@ boolean Adafruit_FT6206::touched(void) {
 /*****************************/
 
 void Adafruit_FT6206::readData(uint16_t *x, uint16_t *y) {
-
-  uint8_t i2cdat[16];
-  I2C_start(I2C1, FT6206_ADDR<<1, I2C_Direction_Transmitter);
-  I2C_write(I2C1, (uint8_t)0);  
-  I2C_stop(I2C1);
-  I2C_start(I2C1, FT6206_ADDR<<1, I2C_Direction_Receiver);
-  //Wire.requestFrom((uint8_t)FT6206_ADDR, (uint8_t)32);
-  
-  uint8_t i;
-  for (i=0; i<15; i++)
-    i2cdat[i] = I2C_read_ack(I2C1);
-  i2cdat[i] = I2C_read_nack(I2C1);
-
-  /*
-  for (int16_t i=0; i<0x20; i++) {
-    Serial.print("I2C $"); Serial.print(i, HEX); Serial.print(" = 0x"); Serial.println(i2cdat[i], HEX);
-  }
-  */
-
+    uint32_t datCount{1};
+    uint8_t i2cdat[16] = {FT6206_ADDR_7BIT};  // writes as {addr, 0}
+    Write(hPJDF, i2cdat, &datCount);
+    datCount = 16;
+    i2cdat[0] = FT6206_ADDR_7BIT;
+    Read(hPJDF, i2cdat, &datCount);
+  //
   touches = i2cdat[0x02];
 
   //Serial.println(touches);
@@ -137,9 +125,6 @@ void Adafruit_FT6206::readData(uint16_t *x, uint16_t *y) {
   for (uint8_t i=0; i<16; i++) {
    // Serial.print("0x"); Serial.print(i2cdat[i], HEX); Serial.print(" ");
   }
-  */
-
-  /*
   Serial.println();
   if (i2cdat[0x01] != 0x00) {
     Serial.print("Gesture #"); 
@@ -177,27 +162,19 @@ TS_Point Adafruit_FT6206::getPoint(void) {
 
 
 uint8_t Adafruit_FT6206::readRegister8(uint8_t reg) {
-  uint8_t x ;
-   // use i2c
-    I2C_start(I2C1, FT6206_ADDR<<1, I2C_Direction_Transmitter); 
-    I2C_write(I2C1, (uint8_t)reg);
-    I2C_stop(I2C1);
-    I2C_start(I2C1, FT6206_ADDR<<1, I2C_Direction_Receiver);
-    // Wire.requestFrom((uint8_t)FT6206_ADDR, (uint8_t)1);
-    x = I2C_read_nack(I2C1);
-
-  //  Serial.print("$"); Serial.print(reg, HEX); 
-  //  Serial.print(": 0x"); Serial.println(x, HEX);
-  
-  return x;
+  uint8_t i2cdat[2] = {FT6206_ADDR_7BIT, reg};
+  uint32_t datCount{1};
+  Write(hPJDF, i2cdat, &datCount); // write i2c
+  i2cdat[0] = {FT6206_ADDR_7BIT};
+  datCount = 1;
+  Read(hPJDF, i2cdat, &datCount);
+  return i2cdat[0];
 }
 
 void Adafruit_FT6206::writeRegister8(uint8_t reg, uint8_t val) {
-   // use i2c
-    I2C_start(I2C1, FT6206_ADDR<<1, I2C_Direction_Transmitter);
-    I2C_write(I2C1, (uint8_t)reg);
-    I2C_write(I2C1, (uint8_t)val);
-    I2C_stop(I2C1);
+    uint32_t datCount{2};
+    uint8_t i2cdat[3] = {FT6206_ADDR_7BIT, reg, val};
+    Write(hPJDF, i2cdat, &datCount);
 }
 
 /****************/

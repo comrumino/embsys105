@@ -99,21 +99,20 @@ EXC_RET_MSP_THREAD EQU     0xFFFFFFF9                              ; Exception r
 
 OS_CPU_SR_Save
     // Capture current interrupt enable/disable status (PRIMASK)
-    // <Your code here>
+    MRS R0, PRIMASK 
     
     // Disable interrupts
-    // <Your code here>
+    CPSID I
     
     // Return captured interrupt enable/disable status
-    // <Your code here>
+    BX LR
 
 OS_CPU_SR_Restore
     // Restore argument in R0 to PRIMASK
-    // <Your code here>
+    MSR PRIMASK, R0
     
     // Return
-    // <Your code here>
-
+    BX LR
 
 ;********************************************************************************************************
 ;                                         START MULTITASKING
@@ -195,47 +194,62 @@ OSIntCtxSw
 
 ContextSwitch
     // Disable interrupts
-    // <Your code here>
+    CPSID I     ; Set PRIMASK to 0x1
     
     // For the initial context switch we must not save the context.
     // To ensure this, PSP is used as a flag to indicate the initial context 
     // switch.
     // See OSStartHighRdy for flag setup.
     
-    // Copy process stack pointer to R0
-    // <Your code here>
+    // Copy process stack pointer (PSP) to R0
+    MRS R0, PSP         ; stores 4 (no) or 0 (yes) to indicate if initial ctx switch occurred for uCOS
     
     // Subtract 4 and set APSR flags
-    // <Your code here>
+    SUBS R0, R0, #4     ; by subtracting 4, initial ctx switch goes from yes to no for uCOS
     
-    // If R0==0 use conditional execution to set PSP to 0 and branch to 
-    // ContextSwitch_AfterSave
-    // <Your code here>
+    // If R0==0 use conditional execution to set PSP to 0 AND branch to ContextSwitch_AfterSave
+    ITT EQ
+    // MOVEQ R0, #2
+    // MSR CONTROL, R0     ; bit[0] must be 0 to write, bit[1] set to 1 for PSP, bit[2] ignored since we aren't using FP  
+    MSREQ PSP, R0
+    BLEQ ContextSwitch_AfterSave
 
     // Save R4-R11 to main stack
-    // <Your code here>
+    PUSH {R4,R5,R6,R7,R8,R9,R10,R11}
 
     // OSTCBCur->OSTCBStkPtr = SP
-    // <Your code here>
+    LDR R0, =OSTCBCur           ; Load addr of OSTCBCur
+    LDR R0, [R0]                ; Load value of OSTCBCur which is the address of OSTCBStkPtr
+    STR SP, [R0]                ; Str the value
 
     // At this point, entire context of task has been saved
     
 ContextSwitch_AfterSave
 
     // Call OSTaskSwHook();
-    // <Your code here>
+    BL OSTaskSwHook
 
     // OSPrioCur = OSPrioHighRdy;
-    // <Your code here>
+    LDR R0, =OSPrioCur          ; Load address of OSPrioCur
+    LDR R1, =OSPrioHighRdy      ; Load address of OSPrioHighRdy
+    LDRB R1, [R1]               ; Load value of OSPrioHighRdy
+    STRB R1, [R0]               ; Store OSPrioHighRdy at OSPrioCur
+
 
     // OSTCBCur  = OSTCBHighRdy;
-    // <Your code here>
+    LDR R0, =OSTCBCur           ; Load address of OSTCBCur
+    LDR R1, =OSTCBHighRdy       ; Load address of OSTCBHighRdy
+    LDR R1, [R1]                ; Load value of OSTCBHighRdy
+    STR R1, [R0]                ; Store value of OSTCBHighRdy at OSTCBCur
 
     // SP = OSTCBHighRdy->OSTCBStkPtr;
-    // <Your code here>
+    LDR R0, =OSTCBHighRdy       ; Load address of OSTCBHighRdy
+    LDR R0, [R0]                ; Load value of OSTCBHighRdy which is the address of OSTCBStkPtr
+    LDR SP, [R0]
     
     // Restore R4-R11
-    // <Your code here>
+    POP {R4,R5,R6,R7,R8,R9,R10,R11}
+    
     
     // Ensure exception returns to Thread Mode and MSP
     MOV     LR, #EXC_RET_MSP_THREAD

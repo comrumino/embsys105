@@ -13,7 +13,7 @@
 
 #include "bsp.h"
 #include "pjdfCtrlSpi.h"
-#include "pjdfCtrlI2c.h"
+#include "pjdfCtrlI2C.h"
 #include "pjdfCtrlLcdILI9341.h"
 #include "pjdfCtrlMp3VS1053.h"
 #include "pjdfCtrlSDAdafruit.h"

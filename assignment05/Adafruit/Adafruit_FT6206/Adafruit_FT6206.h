@@ -17,6 +17,7 @@
 #ifndef ADAFRUIT_FT6206_LIBRARY
 #define ADAFRUIT_FT6206_LIBRARY
 
+#include "pjdf.h"
 #include <stdint.h>
 
 #ifndef boolean
@@ -25,6 +26,7 @@
 
 
 #define FT6206_ADDR           0x38
+#define FT6206_ADDR_7BIT      (FT6206_ADDR<<1) // first 7 of 8 bits specify address, shift left
 #define FT6206_G_FT5201ID     0xA8
 #define FT6206_REG_NUMTOUCHES 0x02
 
@@ -60,6 +62,7 @@ class Adafruit_FT6206 {
 
   Adafruit_FT6206(void);
   boolean begin(uint8_t thresh = FT6206_DEFAULT_THRESSHOLD);  
+  void setPjdfHandle(HANDLE handle);
 
   void writeRegister8(uint8_t reg, uint8_t val);
   uint8_t readRegister8(uint8_t reg);
@@ -71,8 +74,11 @@ class Adafruit_FT6206 {
   TS_Point getPoint(void);
 
  private:
-  uint8_t touches;
-  uint16_t touchX[2], touchY[2], touchID[2];
+  HANDLE hPJDF{0};
+  uint8_t touches{0};
+  uint16_t touchX[2] = {};
+  uint16_t touchY[2] = {};
+  uint16_t touchID[2] = {};
 
 };
 

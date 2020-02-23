@@ -19,8 +19,8 @@ typedef struct _PjdfContextI2C
     uint32_t i2CDevAddr;
 } PjdfContextI2c;
 
-static PjdfContextI2c i2c1Context = { PJDF_I2C1, 0 };
-
+static PjdfContextI2c i2c1Context = { I2C1, 0 };
+OS_CPU_SR cpu_sr = 0u;
 
 
 // OpenI2C
@@ -49,7 +49,21 @@ static PjdfErrCode CloseI2C(DriverInternal *pDriver)
 // Returns: PJDF_ERR_NONE if there was no error, otherwise an error code.
 static PjdfErrCode ReadI2C(DriverInternal *pDriver, void* pBuffer, INT32U* pCount)
 {
-	<your code here>
+    // TODO
+    PjdfContextI2c *pContext = (PjdfContextI2c *)pDriver->deviceContext;
+    if (pContext == NULL) while (1) ;
+    uint8_t *i2cdat = (uint8_t *)pBuffer;
+
+    OS_ENTER_CRITICAL();
+    I2C_start(pContext->i2cMemMap, i2cdat[0], I2C_Direction_Receiver);
+    uint32_t i = 0;
+    for (; i < *pCount - 1; ++i) {
+        i2cdat[i] = I2C_read_ack(pContext->i2cMemMap);
+    }
+    i2cdat[i] = I2C_read_nack(pContext->i2cMemMap);
+    OS_EXIT_CRITICAL();
+ 
+    return PJDF_ERR_NONE;
 }
 
 
@@ -64,14 +78,27 @@ static PjdfErrCode ReadI2C(DriverInternal *pDriver, void* pBuffer, INT32U* pCoun
 // Returns: PJDF_ERR_NONE if there was no error, otherwise an error code.
 static PjdfErrCode WriteI2C(DriverInternal *pDriver, void* pBuffer, INT32U* pCount)
 {
-	<your code here>
+    // TODO:
+    PjdfContextI2c *pContext = (PjdfContextI2c *)pDriver->deviceContext;
+    if (pContext == NULL) while (1) ;
+    uint8_t *i2cdata = (uint8_t *)pBuffer;
+    uint32_t i = 0;
+
+    OS_ENTER_CRITICAL();
+    I2C_start(pContext->i2cMemMap, i2cdata[i], I2C_Direction_Transmitter);
+    while (i++ < *pCount) {
+        I2C_write(pContext->i2cMemMap, i2cdata[i]);
+    }
+    I2C_stop(pContext->i2cMemMap);
+    OS_EXIT_CRITICAL();
+
+    return PJDF_ERR_NONE;
 }
 
 // IoctlI2C
 // Handles the request codes defined in pjdfCtrlI2c.h
 static PjdfErrCode IoctlI2C(DriverInternal *pDriver, INT8U request, void* pArgs, INT32U* pSize)
 {
-    INT8U osErr;
     PjdfContextI2c *pContext = (PjdfContextI2c*) pDriver->deviceContext;
     if (pContext == NULL) while(1);
     switch (request)
@@ -104,7 +131,7 @@ PjdfErrCode InitI2C(DriverInternal *pDriver, char *pName)
     {
         pDriver->maxRefCount = 1; // Maximum refcount allowed for the device
         pDriver->deviceContext = (void*) &i2c1Context;
-        BspI2C1_init(); // init I2C1 hardware
+        I2C1_init(); // init I2C1 hardware
     }
   
     // Assign implemented functions to the interface pointers

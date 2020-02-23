@@ -161,6 +161,10 @@ void LcdTouchDemoTask(void* pdata)
     DrawLcdContents();
     
     PrintWithBuf(buf, BUFSIZE, "Initializing FT6206 touchscreen controller\n");
+    HANDLE hI2C1 = Open(PJDF_DEVICE_ID_I2C1, 0);
+    if (!PJDF_IS_VALID_HANDLE(hI2C1)) while (1);
+    touchCtrl.setPjdfHandle(hI2C1);
+
     if (! touchCtrl.begin(40)) {  // pass in 'sensitivity' coefficient
         PrintWithBuf(buf, BUFSIZE, "Couldn't start FT6206 touchscreen controller\n");
         while (1);
@@ -171,10 +175,9 @@ void LcdTouchDemoTask(void* pdata)
     while (1) { 
         boolean touched = false;
         
-        // TODO: Poll for a touch on the touch panel
-        // <Your code here>
-        // <hint: Call a function provided by touchCtrl
-        
+        // TODO:
+        // Poll for a touch on the touch panel
+        touched = touchCtrl.touched();
         if (! touched) {
             OSTimeDly(5);
             continue;
@@ -182,11 +185,11 @@ void LcdTouchDemoTask(void* pdata)
         
         TS_Point rawPoint;
        
-        // TODO: Retrieve a point  
-        // <Your code here>
+        // TODO:
+        // Retrieve a point  
+        rawPoint = touchCtrl.getPoint();
 
-        if (rawPoint.x == 0 && rawPoint.y == 0)
-        {
+        if (rawPoint.x == 0 && rawPoint.y == 0) {
             continue; // usually spurious, so ignore
         }
         

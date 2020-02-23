@@ -44,5 +44,6 @@ PjdfErrCode InitSPI(DriverInternal *pDriver, char *pName);
 PjdfErrCode InitMp3VS1053(DriverInternal *pDriver, char *pName);
 PjdfErrCode InitLcdILI9341(DriverInternal *pDriver, char *pName);
 PjdfErrCode InitSDAdafruit(DriverInternal *pDriver, char *pName);
+PjdfErrCode InitI2C(DriverInternal *pDriver, char *pName);
 
 #endif

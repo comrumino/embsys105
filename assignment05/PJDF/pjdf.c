@@ -28,6 +28,7 @@ static DriverInternal driversInternal[MAXDEVICES] =
     {PJDF_DEVICE_ID_MP3_VS1053, InitMp3VS1053},
     {PJDF_DEVICE_ID_LCD_ILI9341, InitLcdILI9341},
     {PJDF_DEVICE_ID_SD_ADAFRUIT, InitSDAdafruit},
+    {PJDF_DEVICE_ID_I2C1, InitI2C},
 };
 
 
