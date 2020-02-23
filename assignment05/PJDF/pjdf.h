@@ -13,6 +13,7 @@
 
 #include "bsp.h"
 #include "pjdfCtrlSpi.h"
+#include "pjdfCtrlI2c.h"
 #include "pjdfCtrlLcdILI9341.h"
 #include "pjdfCtrlMp3VS1053.h"
 #include "pjdfCtrlSDAdafruit.h"
@@ -36,12 +37,14 @@ typedef INT8S HANDLE;
 #define PJDF_DEVICE_ID_MP3_VS1053   "/dev/mp3_vs1053"
 #define PJDF_DEVICE_ID_LCD_ILI9341   "/dev/lcd_ili9341"
 #define PJDF_DEVICE_ID_SD_ADAFRUIT   "/dev/sd_adafruit"
+#define PJDF_DEVICE_ID_I2C1   "/dev/i2c1"
      
 #define PJDF_DEVICE_IDS \
         PJDF_DEVICE_ID_SPI1, \
         PJDF_DEVICE_ID_MP3_VS1053, \
         PJDF_DEVICE_ID_LCD_ILI9341, \
         PJDF_DEVICE_ID_SD_ADAFRUIT, \
+        PJDF_DEVICE_ID_I2C1, \
 
 // Driver error codes
 // Definition: all driver error codes are negative numbers except PJDF_ERR_NONE.
