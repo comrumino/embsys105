@@ -2191,18 +2191,6 @@
         <group>
             <name>mp3</name>
             <file>
-                <name>$PROJ_DIR$\App\mp3\icons.cpp</name>
-            </file>
-            <file>
-                <name>$PROJ_DIR$\App\mp3\icons.h</name>
-            </file>
-            <file>
-                <name>$PROJ_DIR$\App\mp3\render.cpp</name>
-            </file>
-            <file>
-                <name>$PROJ_DIR$\App\mp3\render.h</name>
-            </file>
-            <file>
                 <name>$PROJ_DIR$\App\mp3\util.c</name>
             </file>
             <file>

@@ -1,17 +1,7 @@
 # MP3 Player Project
 
-The aim of my project was to emphasize features that are more unique to embedded systems. Play, pause, and play-state functions function
-much like other music applications. Touch events propagate into activities which fire handlers to synchronize state between contexts.
-Synchronization between contexts is relies on uCOS messaging mailboxes and queues.
-
-Features:
-* Custom play button "▶"    
-* Custom pause button "⏸️"    
-* The play button and pause button toggle to indicate play like spotify does     
-* Read songs from SD    
-* Walk SD for mp3 files to load
-
-How these features work under the hood is detailed in a Activity Diagram.
+The aim of my project was to emphasize features that were characteristic of embedded systems. Play, pause, and skip icons behave like other music applications in that play status is implicitly indicated by pause-play icon toggle.
+A complete list of features can be found at the end of file. From ten-thousand feat, an Activity Diagram summarizes how things work.
 ![MP3-Player-Activity-Diagram.svg](./MP3-Player-Activity-Diagram.svg)
 
 TouchEventTaskStk, ActivitesTaskStk, and MP3StreamTaskStk are the names of stacks allocated for the uCOS tasks TouchEventTask, ActivitesTask, and MP3StreamTask respectively. TouchEventTask handles user input and provides the information to the ActivitiesTask. The
@@ -21,3 +11,10 @@ An often overlooked detail is the less than trivial nature of interpreting conti
 More over, touch events are queued to ActivitesTask. When the ActivitiesTask deduces there are no more touch events, the last valid touch
 screen point is used for the point of release. The point of release determines which button is clicked, thereby firing event handlers such
 as pausing the MP3StreamTask.
+
+Features:
+* Play button "▶"    
+* Pause button "⏸️"    
+* Skip button "⏭️"    
+* The play button and pause button toggle to indicate play like spotify does     
+* Read songs from SD, by walking the root of side for files with the a mp3 extension      

@@ -102,7 +102,7 @@ void Mp3StreamSDFile(HANDLE hMp3, File sdfile)
         Write(hMp3, mp3Buf, &iBufPos);
 
     }
-    
+    sdfile.seek(0);
     Ioctl(hMp3, PJDF_CTRL_MP3_SELECT_COMMAND, 0, 0);
     length = BspMp3SoftResetLen;
     Write(hMp3, (void*)BspMp3SoftReset, &length);

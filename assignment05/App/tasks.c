@@ -36,6 +36,12 @@ const uint32_t appMp3StreamReady = 0x4; // 0000 0100
 
 extern const uint32_t mp3MessagePlay;//const uint32_t mp3MessagePlay = 0x1;
 extern const uint32_t mp3MessagePause;// const uint32_t mp3MessagePause = 0x2;
+extern const uint32_t mp3MessageSkip;// const uint32_t mp3MessagePause = 0x2;
+
+const int activecolor = ILI9341_RED;
+const int inactivecolor = ILI9341_BLACK;
+uint32_t lastActivityTime = 0;
+uint32_t maxActivityRateInTicks = 400; // doherty threshold
 // touch -> mp3 -> Lcd
 OS_EVENT *mp3StreamMbox;
 OS_EVENT *activityQueue;
@@ -54,18 +60,29 @@ OS_FLAG_GRP *AppStatus;
 //
 #define TouchMarginOfSafety 5
 #define PlayPauseLineLength 34
+#define SkipLineLength 34
 #define PlayPauseIcon_X (ILI9341_TFTWIDTH / 2)
 #define PlayPauseIcon_Y ILI9341_TFTHEIGHT - (PlayPauseLineLength * 2)
+#define SkipIcon_X (PlayPauseIcon_X + 72)
+#define SkipIcon_Y PlayPauseIcon_Y
 
 
-bool touchedPausePlay(TS_Point p) {
-    bool touched = PlayPauseIcon_X - (PlayPauseLineLength/2) - TouchMarginOfSafety <= p.x;
-    touched &= p.x <= PlayPauseIcon_X + (PlayPauseLineLength/2) + TouchMarginOfSafety;
-    touched &= PlayPauseIcon_Y - (PlayPauseLineLength/2) -TouchMarginOfSafety <= p.y ;
-    touched &= p.y <= PlayPauseIcon_Y + (PlayPauseLineLength/2) + TouchMarginOfSafety;
+bool touchedNeighborhood(TS_Point p, int iconX, int iconY, int neighborhood) {
+    bool touched = iconX - (neighborhood/2) - TouchMarginOfSafety <= p.x;
+    touched &= p.x <= iconX + (neighborhood/2) + TouchMarginOfSafety;
+    touched &= iconY - (neighborhood/2) -TouchMarginOfSafety <= p.y ;
+    touched &= p.y <= iconY + (neighborhood/2) + TouchMarginOfSafety;
     touched &= p.y != 0 && p.x != 0;
     return touched;
 }
+bool touchedPausePlay(TS_Point p) {
+    return touchedNeighborhood(p, PlayPauseIcon_X, PlayPauseIcon_Y, PlayPauseLineLength);
+}
+bool touchedSkip(TS_Point p) {
+    return touchedNeighborhood(p, SkipIcon_X, SkipIcon_Y, SkipLineLength);
+}
+
+
 void renderPausePlayCircle(Adafruit_ILI9341 lcdCtr, int fillcolor) {
   lcdCtrl.drawCircle(PlayPauseIcon_X, PlayPauseIcon_Y, PlayPauseLineLength, fillcolor);
 }
@@ -80,6 +97,14 @@ void renderPause(Adafruit_ILI9341 lcdCtrl, int fillcolor) {
   lcdCtrl.fillRect(PlayPauseIcon_X - 10 , PlayPauseIcon_Y - 12, 7, 24, fillcolor);    
   lcdCtrl.fillRect(PlayPauseIcon_X + 3, PlayPauseIcon_Y - 12, 7, 24, fillcolor);
 }
+void renderSkip(Adafruit_ILI9341 lcdCtrl, int fillcolor) {
+  lcdCtrl.fillTriangle(PlayPauseIcon_X + 61, PlayPauseIcon_Y - 12,
+                       PlayPauseIcon_X + 61, PlayPauseIcon_Y + 12,
+                       PlayPauseIcon_X + 82, PlayPauseIcon_Y, fillcolor);
+    lcdCtrl.fillRect(PlayPauseIcon_X + 78, PlayPauseIcon_Y - 12, 7, 24, fillcolor);
+
+}
+
 //
 //
 //
@@ -155,15 +180,17 @@ void StartupTask(void *pdata) {
     OSTaskDel(OS_PRIO_SELF);
 }
 
-static void DrawLcdContents() {
+static void renderLcdInitialState() {
+    /*  Print a message on the LCD
     char buf[BUFSIZE];
-    lcdCtrl.fillScreen(ILI9341_BLACK);
-
-    // Print a message on the LCD
     lcdCtrl.setCursor(40, 60);
     lcdCtrl.setTextColor(ILI9341_WHITE);
     lcdCtrl.setTextSize(2);
-    PrintToLcdWithBuf(buf, BUFSIZE, "Hello World!");
+    PrintToLcdWithBuf(buf, BUFSIZE, "Hello World!"); */
+    lcdCtrl.fillScreen(inactivecolor);
+    renderPausePlayCircle(lcdCtrl, activecolor);
+    renderPlay(lcdCtrl,activecolor);
+    renderSkip(lcdCtrl, activecolor);
 }
 
 // Renders a character at the current cursor position on the LCD
@@ -189,12 +216,11 @@ void PrintToLcdWithBuf(char *buf, int size, char *format, ...) {
 ************************************************************************************/
 
 void TouchEventTask(void *pdata) {
-        INT8U uCOSerr = OS_ERR_NONE;
-
+    INT8U uCOSerr = OS_ERR_NONE;
     char buf[BUFSIZE];
     PrintWithBuf(buf, BUFSIZE, "TouchEventTask: starting\n");
 
-    PrintWithBuf(buf, BUFSIZE, "Initializing FT6206 touchscreen controller\n");
+    PrintWithBuf(buf, BUFSIZE, "Opening I2C1 handle for touch controller\n");
     HANDLE hI2C1 = Open(PJDF_DEVICE_ID_I2C1, 0);
     if (!PJDF_IS_VALID_HANDLE(hI2C1))
         while (1)
@@ -207,25 +233,23 @@ void TouchEventTask(void *pdata) {
             ;
     }
 
-    boolean touched = false;
     TS_Point rawPoint = tsReleasePseudoPoint;
-    // send point (0, 0) when no touch and delaying, otherwise send realpoint
     while (1) {
         
         rawPoint = *(TS_Point *)OSMboxPend(touchMbox, 0, &uCOSerr);
-
-        if (rawPoint.x == 0 && rawPoint.y == 0) continue;
-        // transform raw touch shield coordinates to display coordinates and point
-        *pTsPointBuffer = TS_Point(MapTouchToScreen(rawPoint.x, ILI9341_TFTWIDTH), MapTouchToScreen(rawPoint.y, ILI9341_TFTHEIGHT));
-
-        uCOSerr = OSQPost(activityQueue, (void *)pTsPointBuffer);
-        if (uCOSerr == OS_ERR_NONE) {
-          pTsPointBuffer++;
-          if (pTsPointBuffer ==  pEndTsPointBuffer) {
-                pTsPointBuffer = pStartTsPointBuffer;
-          }
-        } else {
-            PrintWithBuf(buf, BUFSIZE, "Failed to post touch event information\n");
+        while (uCOSerr != OS_ERR_TIMEOUT) {
+            // remap point, post point, and if all is well  pend for 5. timeout will indicate touch release event
+            // transform raw touch shield coordinates to display coordinates and point
+            *pTsPointBuffer = TS_Point(MapTouchToScreen(rawPoint.x, ILI9341_TFTWIDTH), MapTouchToScreen(rawPoint.y, ILI9341_TFTHEIGHT));
+            //if (rawPoint.x == 0 && rawPoint.y == 0) continue;
+            uCOSerr = OSQPost(activityQueue, (void *)pTsPointBuffer);
+            ++pTsPointBuffer;
+            if (pTsPointBuffer == pEndTsPointBuffer) pTsPointBuffer = pStartTsPointBuffer;
+            rawPoint = *(TS_Point *)OSMboxPend(touchMbox, 5, &uCOSerr);
+        }
+        // indefinate pend returning, followed by timeout waiting for touch event indicate touch release
+        if (uCOSerr == OS_ERR_TIMEOUT && OSQPost(activityQueue, (void *)&tsReleasePseudoPoint) != OS_ERR_NONE) {
+              PrintWithBuf(buf, BUFSIZE, "Failed to post touch screen release pseudo point\n");
         }
     }
 }
@@ -239,24 +263,20 @@ void TouchEventTask(void *pdata) {
 
 void ActivityTask(void *pdata) {
     INT8U uCOSerr = OS_ERR_NONE;
-
     PjdfErrCode pjdfErr;
     INT32U length;
-
     char buf[BUFSIZE];
     PrintWithBuf(buf, BUFSIZE, "ActivityTask: starting\n");
 
-    PrintWithBuf(buf, BUFSIZE, "Opening LCD driver: %s\n", PJDF_DEVICE_ID_LCD_ILI9341);
-    // Open handle to the LCD driver
+    PrintWithBuf(buf, BUFSIZE, "Opening LCD device handle: %s\n", PJDF_DEVICE_ID_LCD_ILI9341);
+    // Open an instance of the LCD driver
     HANDLE hLcd = Open(PJDF_DEVICE_ID_LCD_ILI9341, 0);
     if (!PJDF_IS_VALID_HANDLE(hLcd))
         while (1)
             ;
 
-    PrintWithBuf(buf, BUFSIZE, "Opening LCD SPI driver: %s\n", LCD_SPI_DEVICE_ID);
-    // We talk to the LCD controller over a SPI interface therefore
-    // open an instance of that SPI driver and pass the handle to
-    // the LCD driver.
+    PrintWithBuf(buf, BUFSIZE, "Opening LCD SPI device handle: %s\n", LCD_SPI_DEVICE_ID);
+    // SPI communication is used for the Lcd. Open an instance of the SPI driver for the LCD driver
     HANDLE hSPI = Open(LCD_SPI_DEVICE_ID, 0);
     if (!PJDF_IS_VALID_HANDLE(hSPI))
         while (1)
@@ -272,20 +292,14 @@ void ActivityTask(void *pdata) {
     lcdCtrl.setPjdfHandle(hLcd);
     lcdCtrl.begin();
 
-
-    // Initialize display state variables
-    int activecolor = ILI9341_RED;
-    int inactivecolor = ILI9341_BLACK;
+    renderLcdInitialState();
+    // initialize display state variables
+    uint32_t tickTime = 0;
     bool playing = false;
     boolean releasedTouch = false;
     boolean contiguousTouch = false;
     TS_Point p = tsReleasePseudoPoint;
-
     void *msg = NULL;
-    // Render initial display state
-    DrawLcdContents();
-    renderPausePlayCircle(lcdCtrl, activecolor);
-    renderPlay(lcdCtrl,activecolor);
     // Pend for activity
     while (1) {
         msg = OSQPend(activityQueue, 0, &uCOSerr);
@@ -306,9 +320,15 @@ void ActivityTask(void *pdata) {
         }
         // update display based on activity and "listeners"
         if (releasedTouch) { // check touch release "listeners"
-          PrintWithBuf(buf, BUFSIZE, "ActivityTask: touchedPausePlay %u\n", (uint8_t)touchedPausePlay(p));
-
+          tickTime = OSTimeGet();
+          if (tickTime - lastActivityTime > maxActivityRateInTicks) {
+                lastActivityTime = tickTime;
+          } else {
+                continue;
+          }
+          PrintWithBuf(buf, BUFSIZE, "ActivityTask: firing relevant releasedTouch events\n");
           if (touchedPausePlay(p)) {
+
           // set playing according to state accounting for curtouched
           playing = !playing;
           // now render and send messages to make playing state consistent between contexts
@@ -331,10 +351,18 @@ void ActivityTask(void *pdata) {
           if (uCOSerr != OS_ERR_NONE) {
             playing = !playing; // revert state since nothing is rendered on err
           }
+          } else if (touchedSkip(p)){
+            
+            if (OSMboxPost(mp3StreamMbox, (void *)&mp3MessageSkip) == OS_ERR_NONE) {
+                              PrintWithBuf(buf, BUFSIZE, "Sent skip message to Mp3StreamTask\n");
+            } else {
+                                            PrintWithBuf(buf, BUFSIZE, "Failed to send skip message to Mp3StreamTask\n");
+            }
+
           }
         }
         if (contiguousTouch) { // check contiguous touch "listener"
-            if (!touchedPausePlay(p)) { // draw point outside of pause play only
+            if (!touchedPausePlay(p) && !touchedSkip(p)) { // draw point outside of pause play only
                 lcdCtrl.fillCircle(p.x, p.y, PENRADIUS, ILI9341_RED);
             }
         }
