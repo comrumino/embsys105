@@ -11,8 +11,8 @@
 
 // To use Kustaa Nyholm's printf, comment stdio.h and uncomment the 2 lines after it
 #include <stdio.h>
-// #include "printf.h"
-// #define snprintf PrintWithBuf
+#include "printf.h"
+#define snprintf PrintWithBuf
 
 #include <stdarg.h>
 #include <os_cpu.h>
@@ -30,7 +30,7 @@ void PrintToDeviceWithBuf(void (*PrintCharFunc)(char c), char *buf, int size, ch
 #define _DBG_PRINTX_ARG(arg...) arg /* unroll the parens around the var args*/
 #define RETAILMSG(x,y) \
     ((x) ? (snprintf(stringbuffer, PRINTBUFMAX, _DBG_PRINTX_ARG y), PrintString(stringbuffer)) : (void)(0))
-#define PRINTBUFMAX 128
+#define PRINTBUFMAX 256
 #define PRINT_DEFINEBUFFER() char stringbuffer[PRINTBUFMAX]
 #define PRINT_BUFFER() extern char stringbuffer[]
 

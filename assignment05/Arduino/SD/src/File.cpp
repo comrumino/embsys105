@@ -12,6 +12,8 @@
 
  */
 #include <string.h>
+#include <string>
+#include <algorithm>
 
 #include <SD.h>
 
@@ -44,8 +46,8 @@ File::File(SdFile f, const char *n) {
   if (_file) {
     memcpy(_file, &f, sizeof(SdFile));
     
-    strncpy(_name, n, 12);
-    _name[12] = 0;
+    strncpy(_name, n, FILE_NAME_SZ - 1);
+    _name[FILE_NAME_SZ - 1] = 0;
     
     /* for debugging file open/close leaks
        nfilecount++;
@@ -54,13 +56,15 @@ File::File(SdFile f, const char *n) {
        Serial.print("\": ");
        Serial.println(nfilecount, DEC);
     */
+     _failbit = 0;
   }
 }
+
 
 File::File(void) {
   _file = 0;
   _name[0] = 0;
-  //Serial.print("Created empty file object");
+  // _failbit keeps default of 1
 }
 
 // returns a pointer to the file name
@@ -142,6 +146,23 @@ uint32_t File::position() {
 uint32_t File::size() {
   if (! _file) return 0;
   return _file->fileSize();
+}
+
+
+uint32_t File::failbit(void) {
+  return _failbit;
+}
+
+char *File::ext(void) {
+  std::string name(_name);
+  std::size_t pos = name.find_last_of(".");
+  return &_name[pos];
+}
+
+boolean File::isMp3(void) {
+  std::string nameExt{ext()};
+  std::string mp3Ext(".mp3");
+  return nameExt.size() == mp3Ext.size() && std::equal(nameExt.begin(), nameExt.end(), mp3Ext.begin(), [](auto a, auto b){return std::tolower(a)==std::tolower(b);});
 }
 
 void File::close() {

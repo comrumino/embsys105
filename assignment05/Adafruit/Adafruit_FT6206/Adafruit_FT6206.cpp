@@ -176,7 +176,7 @@ void Adafruit_FT6206::writeRegister8(uint8_t reg, uint8_t val) {
 
 /****************/
 
-TS_Point::TS_Point(void) { x = y = 0; }
+TS_Point::TS_Point(void) { x = y = z = 0; }
 
 TS_Point::TS_Point(int16_t x0, int16_t y0, int16_t z0) {
     x = x0;

@@ -2189,6 +2189,27 @@
     <group>
         <name>App</name>
         <group>
+            <name>mp3</name>
+            <file>
+                <name>$PROJ_DIR$\App\mp3\icons.cpp</name>
+            </file>
+            <file>
+                <name>$PROJ_DIR$\App\mp3\icons.h</name>
+            </file>
+            <file>
+                <name>$PROJ_DIR$\App\mp3\render.cpp</name>
+            </file>
+            <file>
+                <name>$PROJ_DIR$\App\mp3\render.h</name>
+            </file>
+            <file>
+                <name>$PROJ_DIR$\App\mp3\util.c</name>
+            </file>
+            <file>
+                <name>$PROJ_DIR$\App\mp3\util.h</name>
+            </file>
+        </group>
+        <group>
             <name>uCOS</name>
             <file>
                 <name>$PROJ_DIR$\App\uCOS\app_cfg.h</name>
@@ -2202,12 +2223,6 @@
         </group>
         <file>
             <name>$PROJ_DIR$\App\main.c</name>
-        </file>
-        <file>
-            <name>$PROJ_DIR$\App\mp3Util.c</name>
-        </file>
-        <file>
-            <name>$PROJ_DIR$\App\mp3Util.h</name>
         </file>
         <file>
             <name>$PROJ_DIR$\App\shell.c</name>

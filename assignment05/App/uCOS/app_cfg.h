@@ -69,7 +69,7 @@
 *********************************************************************************************************
 */
 
-#define  APP_CFG_TASK_START_STK_SIZE            256u
+#define  APP_CFG_TASK_START_STK_SIZE            1024u
 #define  APP_CFG_TASK_EQ_STK_SIZE               512u
 #define  APP_CFG_TASK_OBJ_STK_SIZE              256u
 

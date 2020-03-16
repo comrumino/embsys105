@@ -22,11 +22,13 @@
 
 #define FILE_READ O_READ
 #define FILE_WRITE (O_READ | O_WRITE | O_CREAT)
+const int FILE_NAME_SZ = 32;
 
 class File {
  private:
-  char _name[13]; // our name
+  char _name[FILE_NAME_SZ]; // our name
   SdFile *_file;  // underlying file pointer
+  uint32_t _failbit = 1;
 
 public:
   File(SdFile f, const char *name);     // wraps an underlying SdFile
@@ -41,9 +43,12 @@ public:
   boolean seek(uint32_t pos);
   uint32_t position();
   uint32_t size();
+  uint32_t failbit();
   void close();
   operator bool();
   char * name();
+  char * ext();
+  boolean isMp3();
 
   boolean isDirectory(void);
   File openNextFile(uint8_t mode = O_RDONLY);

@@ -48,7 +48,7 @@
 class TS_Point {
   public:
     TS_Point(void);
-    TS_Point(int16_t x, int16_t y, int16_t z);
+    TS_Point(int16_t x, int16_t y, int16_t z=0);
 
     bool operator==(TS_Point);
     bool operator!=(TS_Point);
