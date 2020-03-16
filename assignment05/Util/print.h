@@ -2,7 +2,7 @@
     print.h
 
     Developed for University of Washington embedded systems programming certificate
-    
+
     2016/2 inherited from Mitch Ishihara and others
 */
 
@@ -10,12 +10,12 @@
 #define __PRINT_H__
 
 // To use Kustaa Nyholm's printf, comment stdio.h and uncomment the 2 lines after it
-#include <stdio.h>
 #include "printf.h"
+#include <stdio.h>
 #define snprintf PrintWithBuf
 
-#include <stdarg.h>
 #include <os_cpu.h>
+#include <stdarg.h>
 
 void PrintHex(INT32U u32);
 void Print_uint32(INT32U u);
@@ -28,17 +28,17 @@ void PrintToDeviceWithBuf(void (*PrintCharFunc)(char c), char *buf, int size, ch
 // Macros for printing debug messages.
 //
 #define _DBG_PRINTX_ARG(arg...) arg /* unroll the parens around the var args*/
-#define RETAILMSG(x,y) \
+#define RETAILMSG(x, y)                                                                                                \
     ((x) ? (snprintf(stringbuffer, PRINTBUFMAX, _DBG_PRINTX_ARG y), PrintString(stringbuffer)) : (void)(0))
 #define PRINTBUFMAX 256
 #define PRINT_DEFINEBUFFER() char stringbuffer[PRINTBUFMAX]
 #define PRINT_BUFFER() extern char stringbuffer[]
 
 #ifdef DEBUG
-#define DEBUGMSG(x,y) \
+#define DEBUGMSG(x, y)                                                                                                 \
     ((x) ? (snprintf(stringbuffer, PRINTBUFMAX, _DBG_PRINTX_ARG y), PrintString(stringbuffer)) : (void)(0))
 #else // DEBUG
-    #define DEBUGMSG(x,y) (0)
+#define DEBUGMSG(x, y) (0)
 #endif // DEBUG
 
 #endif /* __PRINT_H__ */

@@ -3,7 +3,7 @@
     Some utility functions for controlling the MP3 decoder.
 
     Developed for University of Washington embedded systems programming certificate
-    
+
     2016/2 Nick Strathy wrote/arranged it
 */
 
@@ -14,8 +14,6 @@
 const uint32_t mp3MessagePlay = 0x1;
 const uint32_t mp3MessagePause = 0x2;
 const uint32_t mp3MessageSkip = 0x3;
-
-
 
 PjdfErrCode Mp3GetRegister(HANDLE hMp3, INT8U *cmdInDataOut, INT32U bufLen);
 void Mp3Init(HANDLE hMp3);

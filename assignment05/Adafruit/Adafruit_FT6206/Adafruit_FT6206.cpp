@@ -43,7 +43,6 @@ boolean Adafruit_FT6206::begin(uint8_t threshhold) {
     writeRegister8(FT6206_REG_THRESHHOLD, threshhold);
     // set interrupt polling mode 0x00, interrupt trigger mode 0x01
     writeRegister8(FT6206_REG_G_MODE, 0x01);
-    
 
     if ((readRegister8(FT6206_REG_VENDID) != 17) || (readRegister8(FT6206_REG_CHIPID) != 6))
         return false;

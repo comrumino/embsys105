@@ -16,11 +16,11 @@
 *
 * LICENSING TERMS:
 * ---------------
-*           uC/OS-II is provided in source form for FREE short-term evaluation, for educational use or 
+*           uC/OS-II is provided in source form for FREE short-term evaluation, for educational use or
 *           for peaceful research.  If you plan or intend to use uC/OS-II in a commercial application/
-*           product then, you need to contact Micrium to properly license uC/OS-II for its use in your 
-*           application/product.   We provide ALL the source code for your convenience and to help you 
-*           experience uC/OS-II.  The fact that the source is provided does NOT mean that you can use 
+*           product then, you need to contact Micrium to properly license uC/OS-II for its use in your
+*           application/product.   We provide ALL the source code for your convenience and to help you
+*           experience uC/OS-II.  The fact that the source is provided does NOT mean that you can use
 *           it commercially without paying a licensing fee.
 *
 *           Knowledge of the source code may NOT be used to develop a similar product.
@@ -36,24 +36,22 @@
 *********************************************************************************************************
 */
 
-#ifndef  OS_CPU_H
-#define  OS_CPU_H
+#ifndef OS_CPU_H
+#define OS_CPU_H
 
 #ifdef __cplusplus
- extern "C" {
+extern "C" {
 #endif
 
-
-#ifdef   OS_CPU_GLOBALS
-#define  OS_CPU_EXT
+#ifdef OS_CPU_GLOBALS
+#define OS_CPU_EXT
 #else
-#define  OS_CPU_EXT  extern
+#define OS_CPU_EXT extern
 #endif
 
-#ifndef  OS_CPU_EXCEPT_STK_SIZE
-#define  OS_CPU_EXCEPT_STK_SIZE    128u          /* Default exception stack size is 128 OS_STK entries */
+#ifndef OS_CPU_EXCEPT_STK_SIZE
+#define OS_CPU_EXCEPT_STK_SIZE 128u /* Default exception stack size is 128 OS_STK entries */
 #endif
-
 
 /*
 *********************************************************************************************************
@@ -62,11 +60,10 @@
 */
 
 #ifdef __ARMVFP__
-#define  OS_CPU_ARM_FP_EN                                 1u
+#define OS_CPU_ARM_FP_EN 1u
 #else
-#define  OS_CPU_ARM_FP_EN                                 0u
+#define OS_CPU_ARM_FP_EN 0u
 #endif
-
 
 /*
 *********************************************************************************************************
@@ -91,7 +88,7 @@
 *********************************************************************************************************
 */
 
-#define  OS_CPU_CFG_SYSTICK_PRIO           0u
+#define OS_CPU_CFG_SYSTICK_PRIO 0u
 
 /*
 *********************************************************************************************************
@@ -100,19 +97,18 @@
 *********************************************************************************************************
 */
 
-typedef unsigned char  BOOLEAN;
-typedef unsigned char  INT8U;                    /* Unsigned  8 bit quantity                           */
-typedef signed   char  INT8S;                    /* Signed    8 bit quantity                           */
-typedef unsigned short INT16U;                   /* Unsigned 16 bit quantity                           */
-typedef signed   short INT16S;                   /* Signed   16 bit quantity                           */
-typedef unsigned int   INT32U;                   /* Unsigned 32 bit quantity                           */
-typedef signed   int   INT32S;                   /* Signed   32 bit quantity                           */
-typedef float          FP32;                     /* Single precision floating point                    */
-typedef double         FP64;                     /* Double precision floating point                    */
+typedef unsigned char BOOLEAN;
+typedef unsigned char INT8U;   /* Unsigned  8 bit quantity                           */
+typedef signed char INT8S;     /* Signed    8 bit quantity                           */
+typedef unsigned short INT16U; /* Unsigned 16 bit quantity                           */
+typedef signed short INT16S;   /* Signed   16 bit quantity                           */
+typedef unsigned int INT32U;   /* Unsigned 32 bit quantity                           */
+typedef signed int INT32S;     /* Signed   32 bit quantity                           */
+typedef float FP32;            /* Single precision floating point                    */
+typedef double FP64;           /* Double precision floating point                    */
 
-typedef unsigned int   OS_STK;                   /* Each stack entry is 32-bit wide                    */
-typedef unsigned int   OS_CPU_SR;                /* Define size of CPU status register (PSR = 32 bits) */
-
+typedef unsigned int OS_STK;    /* Each stack entry is 32-bit wide                    */
+typedef unsigned int OS_CPU_SR; /* Define size of CPU status register (PSR = 32 bits) */
 
 /*
 *********************************************************************************************************
@@ -136,13 +132,14 @@ typedef unsigned int   OS_CPU_SR;                /* Define size of CPU status re
 *********************************************************************************************************
 */
 
-#define  OS_CRITICAL_METHOD   3u
+#define OS_CRITICAL_METHOD 3u
 
 #if OS_CRITICAL_METHOD == 3u
-#define  OS_ENTER_CRITICAL()  {cpu_sr = OS_CPU_SR_Save();}
-#define  OS_EXIT_CRITICAL()   {OS_CPU_SR_Restore(cpu_sr);}
+#define OS_ENTER_CRITICAL()                                                                                            \
+    { cpu_sr = OS_CPU_SR_Save(); }
+#define OS_EXIT_CRITICAL()                                                                                             \
+    { OS_CPU_SR_Restore(cpu_sr); }
 #endif
-
 
 /*
 *********************************************************************************************************
@@ -150,10 +147,9 @@ typedef unsigned int   OS_CPU_SR;                /* Define size of CPU status re
 *********************************************************************************************************
 */
 
-#define  OS_STK_GROWTH        1u                  /* Stack grows from HIGH to LOW memory on ARM        */
+#define OS_STK_GROWTH 1u /* Stack grows from HIGH to LOW memory on ARM        */
 
-#define  OS_TASK_SW()         OSCtxSw()
-
+#define OS_TASK_SW() OSCtxSw()
 
 /*
 *********************************************************************************************************
@@ -161,9 +157,8 @@ typedef unsigned int   OS_CPU_SR;                /* Define size of CPU status re
 *********************************************************************************************************
 */
 
-OS_CPU_EXT  OS_STK   OS_CPU_ExceptStk[OS_CPU_EXCEPT_STK_SIZE];
-OS_CPU_EXT  OS_STK  *OS_CPU_ExceptStkBase;
-
+OS_CPU_EXT OS_STK OS_CPU_ExceptStk[OS_CPU_EXCEPT_STK_SIZE];
+OS_CPU_EXT OS_STK *OS_CPU_ExceptStkBase;
 
 /*
 *********************************************************************************************************
@@ -171,30 +166,28 @@ OS_CPU_EXT  OS_STK  *OS_CPU_ExceptStkBase;
 *********************************************************************************************************
 */
 
-#if OS_CRITICAL_METHOD == 3u                      /* See OS_CPU_A.ASM                                  */
-OS_CPU_SR  OS_CPU_SR_Save    (void);
-void       OS_CPU_SR_Restore (OS_CPU_SR cpu_sr);
+#if OS_CRITICAL_METHOD == 3u /* See OS_CPU_A.ASM                                  */
+OS_CPU_SR OS_CPU_SR_Save(void);
+void OS_CPU_SR_Restore(OS_CPU_SR cpu_sr);
 #endif
 
-void  OSCtxSw                (void);
-void  OSIntCtxSw             (void);
-void  OSStartHighRdy         (void);
+void OSCtxSw(void);
+void OSIntCtxSw(void);
+void OSStartHighRdy(void);
 
-
-                                                  /* See OS_CPU_C.C                                    */
-void  OS_CPU_SysTickHandler  (void);
-void  OS_CPU_SysTickInit     (INT32U ticksPerSec);
-void  EXTI4IrqHandler         (void);
+/* See OS_CPU_C.C                                    */
+void OS_CPU_SysTickHandler(void);
+void OS_CPU_SysTickInit(INT32U ticksPerSec);
+void EXTI4IrqHandler(void);
 void GetTouchPoint(void);
 
-
 #if (OS_CPU_ARM_FP_EN > 0u)
-void  OS_CPU_FP_Reg_Push     (OS_STK   *stkPtr);
-void  OS_CPU_FP_Reg_Pop      (OS_STK   *stkPtr);
+void OS_CPU_FP_Reg_Push(OS_STK *stkPtr);
+void OS_CPU_FP_Reg_Pop(OS_STK *stkPtr);
 #endif
 
 #ifdef __cplusplus
- }
+}
 #endif
 
 #endif

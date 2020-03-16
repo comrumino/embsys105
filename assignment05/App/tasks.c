@@ -30,13 +30,13 @@ const uint32_t DISPLAY_QUEUE_SIZE = 32;
 const uint32_t TS_BUFFER_SIZE = DISPLAY_QUEUE_SIZE;
 const TS_Point tsReleasePseudoPoint = TS_Point(0xffff, 0xffff, 0xffff);
 //
-const uint32_t appTouchReady = 0x1; // 0000 0001
-const uint32_t appDisplayReady = 0x2; // 0000 0010
+const uint32_t appTouchReady = 0x1;     // 0000 0001
+const uint32_t appDisplayReady = 0x2;   // 0000 0010
 const uint32_t appMp3StreamReady = 0x4; // 0000 0100
 
-extern const uint32_t mp3MessagePlay;//const uint32_t mp3MessagePlay = 0x1;
-extern const uint32_t mp3MessagePause;// const uint32_t mp3MessagePause = 0x2;
-extern const uint32_t mp3MessageSkip;// const uint32_t mp3MessagePause = 0x2;
+extern const uint32_t mp3MessagePlay;  // const uint32_t mp3MessagePlay = 0x1;
+extern const uint32_t mp3MessagePause; // const uint32_t mp3MessagePause = 0x2;
+extern const uint32_t mp3MessageSkip;  // const uint32_t mp3MessagePause = 0x2;
 
 const int activecolor = ILI9341_RED;
 const int inactivecolor = ILI9341_BLACK;
@@ -66,43 +66,36 @@ OS_FLAG_GRP *AppStatus;
 #define SkipIcon_X (PlayPauseIcon_X + 72)
 #define SkipIcon_Y PlayPauseIcon_Y
 
-
 bool touchedNeighborhood(TS_Point p, int iconX, int iconY, int neighborhood) {
-    bool touched = iconX - (neighborhood/2) - TouchMarginOfSafety <= p.x;
-    touched &= p.x <= iconX + (neighborhood/2) + TouchMarginOfSafety;
-    touched &= iconY - (neighborhood/2) -TouchMarginOfSafety <= p.y ;
-    touched &= p.y <= iconY + (neighborhood/2) + TouchMarginOfSafety;
+    bool touched = iconX - (neighborhood / 2) - TouchMarginOfSafety <= p.x;
+    touched &= p.x <= iconX + (neighborhood / 2) + TouchMarginOfSafety;
+    touched &= iconY - (neighborhood / 2) - TouchMarginOfSafety <= p.y;
+    touched &= p.y <= iconY + (neighborhood / 2) + TouchMarginOfSafety;
     touched &= p.y != 0 && p.x != 0;
     return touched;
 }
 bool touchedPausePlay(TS_Point p) {
     return touchedNeighborhood(p, PlayPauseIcon_X, PlayPauseIcon_Y, PlayPauseLineLength);
 }
-bool touchedSkip(TS_Point p) {
-    return touchedNeighborhood(p, SkipIcon_X, SkipIcon_Y, SkipLineLength);
-}
-
+bool touchedSkip(TS_Point p) { return touchedNeighborhood(p, SkipIcon_X, SkipIcon_Y, SkipLineLength); }
 
 void renderPausePlayCircle(Adafruit_ILI9341 lcdCtr, int fillcolor) {
-  lcdCtrl.drawCircle(PlayPauseIcon_X, PlayPauseIcon_Y, PlayPauseLineLength, fillcolor);
+    lcdCtrl.drawCircle(PlayPauseIcon_X, PlayPauseIcon_Y, PlayPauseLineLength, fillcolor);
 }
 
 void renderPlay(Adafruit_ILI9341 lcdCtrl, int fillcolor) {
-  lcdCtrl.fillTriangle(PlayPauseIcon_X - 7, PlayPauseIcon_Y - 12,
-                       PlayPauseIcon_X - 7, PlayPauseIcon_Y + 12,
-                       PlayPauseIcon_X + 14, PlayPauseIcon_Y, fillcolor);    
+    lcdCtrl.fillTriangle(PlayPauseIcon_X - 7, PlayPauseIcon_Y - 12, PlayPauseIcon_X - 7, PlayPauseIcon_Y + 12,
+                         PlayPauseIcon_X + 14, PlayPauseIcon_Y, fillcolor);
 }
 
 void renderPause(Adafruit_ILI9341 lcdCtrl, int fillcolor) {
-  lcdCtrl.fillRect(PlayPauseIcon_X - 10 , PlayPauseIcon_Y - 12, 7, 24, fillcolor);    
-  lcdCtrl.fillRect(PlayPauseIcon_X + 3, PlayPauseIcon_Y - 12, 7, 24, fillcolor);
+    lcdCtrl.fillRect(PlayPauseIcon_X - 10, PlayPauseIcon_Y - 12, 7, 24, fillcolor);
+    lcdCtrl.fillRect(PlayPauseIcon_X + 3, PlayPauseIcon_Y - 12, 7, 24, fillcolor);
 }
 void renderSkip(Adafruit_ILI9341 lcdCtrl, int fillcolor) {
-  lcdCtrl.fillTriangle(PlayPauseIcon_X + 61, PlayPauseIcon_Y - 12,
-                       PlayPauseIcon_X + 61, PlayPauseIcon_Y + 12,
-                       PlayPauseIcon_X + 82, PlayPauseIcon_Y, fillcolor);
+    lcdCtrl.fillTriangle(PlayPauseIcon_X + 61, PlayPauseIcon_Y - 12, PlayPauseIcon_X + 61, PlayPauseIcon_Y + 12,
+                         PlayPauseIcon_X + 82, PlayPauseIcon_Y, fillcolor);
     lcdCtrl.fillRect(PlayPauseIcon_X + 78, PlayPauseIcon_Y - 12, 7, 24, fillcolor);
-
 }
 
 //
@@ -112,9 +105,7 @@ void renderSkip(Adafruit_ILI9341 lcdCtrl, int fillcolor) {
 //
 //
 #define PENRADIUS 3
-long MapTouchToScreen(long coord, long dimension) {
-    return dimension - coord;
-}
+long MapTouchToScreen(long coord, long dimension) { return dimension - coord; }
 
 long MapTouchToScreen(long x, long in_min, long in_max, long out_min, long out_max) {
     // adjust coordinates to account for rotation
@@ -135,7 +126,6 @@ long MapTouchToScreen(long x, long in_min, long in_max, long out_min, long out_m
 static OS_STK TouchEventTaskStk[APP_CFG_TASK_START_STK_SIZE];
 static OS_STK ActivityTaskStk[APP_CFG_TASK_START_STK_SIZE];
 static OS_STK Mp3StreamTaskStk[APP_CFG_TASK_START_STK_SIZE];
-
 
 // Useful functions
 void PrintToLcdWithBuf(char *buf, int size, char *format, ...);
@@ -166,7 +156,6 @@ void StartupTask(void *pdata) {
     activityQueue = OSQCreate(NULL, DISPLAY_QUEUE_SIZE);
     touchMbox = OSMboxCreate(NULL);
 
-
     // Create the test tasks
     PrintWithBuf(buf, BUFSIZE, "StartupTask: Creating the application tasks\n");
 
@@ -189,7 +178,7 @@ static void renderLcdInitialState() {
     PrintToLcdWithBuf(buf, BUFSIZE, "Hello World!"); */
     lcdCtrl.fillScreen(inactivecolor);
     renderPausePlayCircle(lcdCtrl, activecolor);
-    renderPlay(lcdCtrl,activecolor);
+    renderPlay(lcdCtrl, activecolor);
     renderSkip(lcdCtrl, activecolor);
 }
 
@@ -235,21 +224,23 @@ void TouchEventTask(void *pdata) {
 
     TS_Point rawPoint = tsReleasePseudoPoint;
     while (1) {
-        
+
         rawPoint = *(TS_Point *)OSMboxPend(touchMbox, 0, &uCOSerr);
         while (uCOSerr != OS_ERR_TIMEOUT) {
             // remap point, post point, and if all is well  pend for 5. timeout will indicate touch release event
             // transform raw touch shield coordinates to display coordinates and point
-            *pTsPointBuffer = TS_Point(MapTouchToScreen(rawPoint.x, ILI9341_TFTWIDTH), MapTouchToScreen(rawPoint.y, ILI9341_TFTHEIGHT));
-            //if (rawPoint.x == 0 && rawPoint.y == 0) continue;
+            *pTsPointBuffer = TS_Point(MapTouchToScreen(rawPoint.x, ILI9341_TFTWIDTH),
+                                       MapTouchToScreen(rawPoint.y, ILI9341_TFTHEIGHT));
+            // if (rawPoint.x == 0 && rawPoint.y == 0) continue;
             uCOSerr = OSQPost(activityQueue, (void *)pTsPointBuffer);
             ++pTsPointBuffer;
-            if (pTsPointBuffer == pEndTsPointBuffer) pTsPointBuffer = pStartTsPointBuffer;
+            if (pTsPointBuffer == pEndTsPointBuffer)
+                pTsPointBuffer = pStartTsPointBuffer;
             rawPoint = *(TS_Point *)OSMboxPend(touchMbox, 5, &uCOSerr);
         }
         // indefinate pend returning, followed by timeout waiting for touch event indicate touch release
         if (uCOSerr == OS_ERR_TIMEOUT && OSQPost(activityQueue, (void *)&tsReleasePseudoPoint) != OS_ERR_NONE) {
-              PrintWithBuf(buf, BUFSIZE, "Failed to post touch screen release pseudo point\n");
+            PrintWithBuf(buf, BUFSIZE, "Failed to post touch screen release pseudo point\n");
         }
     }
 }
@@ -309,59 +300,57 @@ void ActivityTask(void *pdata) {
             continue;
         }
 
-        if (msg ==  &tsReleasePseudoPoint && contiguousTouch) { // (0,0) <-> release occurred
-          releasedTouch = true;
-          contiguousTouch = false;
+        if (msg == &tsReleasePseudoPoint && contiguousTouch) { // (0,0) <-> release occurred
+            releasedTouch = true;
+            contiguousTouch = false;
         } else { // the only activity expected is touch, contiguousTouch occurred
-          contiguousTouch = true;
-          releasedTouch = false;
-          p = *((TS_Point *)msg);
-
+            contiguousTouch = true;
+            releasedTouch = false;
+            p = *((TS_Point *)msg);
         }
         // update display based on activity and "listeners"
         if (releasedTouch) { // check touch release "listeners"
-          tickTime = OSTimeGet();
-          if (tickTime - lastActivityTime > maxActivityRateInTicks) {
+            tickTime = OSTimeGet();
+            if (tickTime - lastActivityTime > maxActivityRateInTicks) {
                 lastActivityTime = tickTime;
-          } else {
-                continue;
-          }
-          PrintWithBuf(buf, BUFSIZE, "ActivityTask: firing relevant releasedTouch events\n");
-          if (touchedPausePlay(p)) {
-
-          // set playing according to state accounting for curtouched
-          playing = !playing;
-          // now render and send messages to make playing state consistent between contexts
-          if (playing) {
-            uCOSerr = OSMboxPost(mp3StreamMbox, (void *)&mp3MessagePlay);
-            if (uCOSerr == OS_ERR_NONE) {
-                PrintWithBuf(buf, BUFSIZE, "Rendered play active and sent play message\n");
-                renderPlay(lcdCtrl,inactivecolor);  // hide play action
-                renderPause(lcdCtrl,activecolor);  // show pause action
-            }
-          } else { // if paused
-            uCOSerr = OSMboxPost(mp3StreamMbox, (void *)&mp3MessagePause);
-            if (uCOSerr == OS_ERR_NONE) {
-                PrintWithBuf(buf, BUFSIZE, "Sent pause message w/ no err\n");
-                renderPause(lcdCtrl,inactivecolor); // hide pause action
-                renderPlay(lcdCtrl,activecolor);  // show play action
-            }
-          }
-          PrintWithBuf(buf, BUFSIZE, "OSMboxPost to mp3 %u\n", uCOSerr);
-          if (uCOSerr != OS_ERR_NONE) {
-            playing = !playing; // revert state since nothing is rendered on err
-          }
-          } else if (touchedSkip(p)){
-            
-            if (OSMboxPost(mp3StreamMbox, (void *)&mp3MessageSkip) == OS_ERR_NONE) {
-                              PrintWithBuf(buf, BUFSIZE, "Sent skip message to Mp3StreamTask\n");
             } else {
-                                            PrintWithBuf(buf, BUFSIZE, "Failed to send skip message to Mp3StreamTask\n");
+                continue;
             }
+            PrintWithBuf(buf, BUFSIZE, "ActivityTask: firing relevant releasedTouch events\n");
+            if (touchedPausePlay(p)) {
 
-          }
+                // set playing according to state accounting for curtouched
+                playing = !playing;
+                // now render and send messages to make playing state consistent between contexts
+                if (playing) {
+                    uCOSerr = OSMboxPost(mp3StreamMbox, (void *)&mp3MessagePlay);
+                    if (uCOSerr == OS_ERR_NONE) {
+                        PrintWithBuf(buf, BUFSIZE, "Rendered play active and sent play message\n");
+                        renderPlay(lcdCtrl, inactivecolor); // hide play action
+                        renderPause(lcdCtrl, activecolor);  // show pause action
+                    }
+                } else { // if paused
+                    uCOSerr = OSMboxPost(mp3StreamMbox, (void *)&mp3MessagePause);
+                    if (uCOSerr == OS_ERR_NONE) {
+                        PrintWithBuf(buf, BUFSIZE, "Sent pause message w/ no err\n");
+                        renderPause(lcdCtrl, inactivecolor); // hide pause action
+                        renderPlay(lcdCtrl, activecolor);    // show play action
+                    }
+                }
+                PrintWithBuf(buf, BUFSIZE, "OSMboxPost to mp3 %u\n", uCOSerr);
+                if (uCOSerr != OS_ERR_NONE) {
+                    playing = !playing; // revert state since nothing is rendered on err
+                }
+            } else if (touchedSkip(p)) {
+
+                if (OSMboxPost(mp3StreamMbox, (void *)&mp3MessageSkip) == OS_ERR_NONE) {
+                    PrintWithBuf(buf, BUFSIZE, "Sent skip message to Mp3StreamTask\n");
+                } else {
+                    PrintWithBuf(buf, BUFSIZE, "Failed to send skip message to Mp3StreamTask\n");
+                }
+            }
         }
-        if (contiguousTouch) { // check contiguous touch "listener"
+        if (contiguousTouch) {                             // check contiguous touch "listener"
             if (!touchedPausePlay(p) && !touchedSkip(p)) { // draw point outside of pause play only
                 lcdCtrl.fillCircle(p.x, p.y, PENRADIUS, ILI9341_RED);
             }
@@ -375,7 +364,7 @@ void ActivityTask(void *pdata) {
 ************************************************************************************/
 
 void Mp3StreamTask(void *pdata) {
-      INT8U uCOSerr = OS_ERR_NONE;
+    INT8U uCOSerr = OS_ERR_NONE;
 
     PjdfErrCode pjdfErr;
     INT32U length;
@@ -410,10 +399,10 @@ void Mp3StreamTask(void *pdata) {
     // Send initialization data to the MP3 decoder and run a test
     PrintWithBuf(buf, BUFSIZE, "Starting MP3 device test\n");
     Mp3Init(hMp3);
-    
+
     //
     //
-        // Initialize SD card
+    // Initialize SD card
     PrintWithBuf(buf, PRINTBUFMAX, "Opening handle to SD driver: %s\n", PJDF_DEVICE_ID_SD_ADAFRUIT);
     HANDLE hSD = Open(PJDF_DEVICE_ID_SD_ADAFRUIT, 0);
     if (!PJDF_IS_VALID_HANDLE(hSD))
@@ -434,7 +423,7 @@ void Mp3StreamTask(void *pdata) {
     if (PJDF_IS_ERROR(pjdfErr))
         while (1)
             ;
-   
+
     StorageInit(hSD);
     File mp3File;
     uint8_t mp3idx = 0;
@@ -442,8 +431,7 @@ void Mp3StreamTask(void *pdata) {
     if (mp3Count == 0) {
         PrintWithBuf(buf, PRINTBUFMAX, "Failed to find any mp3 files...\n");
         while (1)
-         ;
-
+            ;
     }
     // Set app status flag mp3StreamReady
     OSFlagPost(AppStatus, appMp3StreamReady, OS_FLAG_SET, &uCOSerr);
@@ -451,30 +439,28 @@ void Mp3StreamTask(void *pdata) {
         PrintWithBuf(buf, PRINTBUFMAX, "Failed to set %s\n", PJDF_DEVICE_ID_SD_ADAFRUIT);
     }
     // Primary routine
-    
+
     while (1) {
-      mp3File = StorageGetMp3File(mp3idx);
-      if (mp3File.failbit()) {
-         PrintWithBuf(buf, BUFSIZE, "Skipping streaming of file @ mp3idx=%u\n", mp3idx);
-      } else {
-        PrintWithBuf(buf, BUFSIZE, "Begin streaming sound file  mp3idx=%u\n", mp3idx);
-        Mp3StreamSDFile(hMp3, mp3File);
-        PrintWithBuf(buf, BUFSIZE, "Done streaming sound file  mp3idx=%u\n", mp3idx);
-      }
-      ++mp3idx;
-      mp3idx %= mp3Count;
+        mp3File = StorageGetMp3File(mp3idx);
+        if (mp3File.failbit()) {
+            PrintWithBuf(buf, BUFSIZE, "Skipping streaming of file @ mp3idx=%u\n", mp3idx);
+        } else {
+            PrintWithBuf(buf, BUFSIZE, "Begin streaming sound file  mp3idx=%u\n", mp3idx);
+            Mp3StreamSDFile(hMp3, mp3File);
+            PrintWithBuf(buf, BUFSIZE, "Done streaming sound file  mp3idx=%u\n", mp3idx);
+        }
+        ++mp3idx;
+        mp3idx %= mp3Count;
     }
 }
-
 
 /************************************************************************************
 
    part of external touch interrupts
 
 ************************************************************************************/
-void GetTouchPoint()
-{
-  static TS_Point rawPoint;
-  rawPoint = touchCtrl.getPoint();
-  OSMboxPost(touchMbox, &rawPoint);
+void GetTouchPoint() {
+    static TS_Point rawPoint;
+    rawPoint = touchCtrl.getPoint();
+    OSMboxPost(touchMbox, &rawPoint);
 }
