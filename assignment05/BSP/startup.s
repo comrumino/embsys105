@@ -49,6 +49,7 @@
       EXTERN  ContextSwitch
       EXTERN  OS_CPU_SysTickHandler
       EXTERN  SysTick_Handler
+      EXTERN  EXTI4IrqHandler
 
 ;   This indicates that the following is DATA, even though this is in a CODE section
 ;   The information is not executable, it is a list of pointers
@@ -82,7 +83,7 @@ __vector_table
       DCD     EXTI1IrqHandler               ; EXTI Line1
       DCD     EXTI2IrqHandler               ; EXTI Line2
       DCD     EXTI3IrqHandler               ; EXTI Line3
-      DCD     EXTI4IrqHandler               ; EXTI Line4
+      DCD     EXTI4IrqHandler               ; EXTI Line4 Touch IRQ handler
       DCD     UnusedIrqHandler              ; DMA1 Stream 0
       DCD     UnusedIrqHandler              ; DMA1 Stream 1
       DCD     UnusedIrqHandler              ; DMA1 Stream 2
@@ -133,7 +134,7 @@ __vector_table
       PUBWEAK  EXTI1IrqHandler
       PUBWEAK  EXTI2IrqHandler
       PUBWEAK  EXTI3IrqHandler
-      PUBWEAK  EXTI4IrqHandler 
+      ; PUBWEAK  EXTI4IrqHandler removed for interrupt touch events
       PUBWEAK  EXTI5Thru9IrqHandler
       PUBWEAK  EXTI10Thru15IrqHandler
       
@@ -148,7 +149,7 @@ EXTI0IrqHandler
 EXTI1IrqHandler
 EXTI2IrqHandler
 EXTI3IrqHandler
-EXTI4IrqHandler
+;EXTI4IrqHandler
 EXTI5Thru9IrqHandler
 EXTI10Thru15IrqHandler
 

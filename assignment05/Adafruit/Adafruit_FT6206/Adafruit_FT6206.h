@@ -40,6 +40,7 @@
 #define FT6206_REG_POINTRATE 0x88
 #define FT6206_REG_FIRMVERS 0xA6
 #define FT6206_REG_CHIPID 0xA3
+#define FT6206_REG_G_MODE 0xA4
 #define FT6206_REG_VENDID 0xA8
 
 // calibrated for Adafruit 2.8" ctp screen

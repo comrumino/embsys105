@@ -37,8 +37,9 @@ const uint32_t appMp3StreamReady = 0x4; // 0000 0100
 extern const uint32_t mp3MessagePlay;//const uint32_t mp3MessagePlay = 0x1;
 extern const uint32_t mp3MessagePause;// const uint32_t mp3MessagePause = 0x2;
 // touch -> mp3 -> Lcd
-OS_EVENT *activityQueue;
 OS_EVENT *mp3StreamMbox;
+OS_EVENT *activityQueue;
+OS_EVENT *touchMbox; // external touch interrupt
 
 static TS_Point tsPointBuffer[TS_BUFFER_SIZE];
 static TS_Point *pTsPointBuffer = &tsPointBuffer[0];
@@ -55,6 +56,7 @@ OS_FLAG_GRP *AppStatus;
 #define PlayPauseLineLength 34
 #define PlayPauseIcon_X (ILI9341_TFTWIDTH / 2)
 #define PlayPauseIcon_Y ILI9341_TFTHEIGHT - (PlayPauseLineLength * 2)
+
 
 bool touchedPausePlay(TS_Point p) {
     bool touched = PlayPauseIcon_X - (PlayPauseLineLength/2) - TouchMarginOfSafety <= p.x;
@@ -135,8 +137,10 @@ void StartupTask(void *pdata) {
     OS_CPU_SysTickInit(OS_TICKS_PER_SEC);
 
     // Initialize messaging
-    activityQueue = OSQCreate(NULL, DISPLAY_QUEUE_SIZE);
     mp3StreamMbox = OSMboxCreate((void *)&mp3MessagePause);
+    activityQueue = OSQCreate(NULL, DISPLAY_QUEUE_SIZE);
+    touchMbox = OSMboxCreate(NULL);
+
 
     // Create the test tasks
     PrintWithBuf(buf, BUFSIZE, "StartupTask: Creating the application tasks\n");
@@ -207,18 +211,8 @@ void TouchEventTask(void *pdata) {
     TS_Point rawPoint = tsReleasePseudoPoint;
     // send point (0, 0) when no touch and delaying, otherwise send realpoint
     while (1) {
-        touched = touchCtrl.touched();
-        if (!touched) {
-          if (rawPoint != tsReleasePseudoPoint) {
-                uCOSerr = OSQPost(activityQueue, (void *)&tsReleasePseudoPoint);
-                rawPoint = tsReleasePseudoPoint;
-                PrintWithBuf(buf, BUFSIZE, "TouchEventTask: release\n");
-
-          }
-            OSTimeDly(5);
-            continue;
-        }
-        rawPoint = touchCtrl.getPoint();
+        
+        rawPoint = *(TS_Point *)OSMboxPend(touchMbox, 0, &uCOSerr);
 
         if (rawPoint.x == 0 && rawPoint.y == 0) continue;
         // transform raw touch shield coordinates to display coordinates and point
@@ -292,7 +286,7 @@ void ActivityTask(void *pdata) {
     DrawLcdContents();
     renderPausePlayCircle(lcdCtrl, activecolor);
     renderPlay(lcdCtrl,activecolor);
-    // Pend for activity related to display
+    // Pend for activity
     while (1) {
         msg = OSQPend(activityQueue, 0, &uCOSerr);
         if (uCOSerr != OS_ERR_NONE) {
@@ -442,4 +436,17 @@ void Mp3StreamTask(void *pdata) {
       ++mp3idx;
       mp3idx %= mp3Count;
     }
+}
+
+
+/************************************************************************************
+
+   part of external touch interrupts
+
+************************************************************************************/
+void GetTouchPoint()
+{
+  static TS_Point rawPoint;
+  rawPoint = touchCtrl.getPoint();
+  OSMboxPost(touchMbox, &rawPoint);
 }

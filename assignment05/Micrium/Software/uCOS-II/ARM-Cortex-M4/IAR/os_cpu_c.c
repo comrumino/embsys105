@@ -48,6 +48,7 @@
 
 #include  <ucos_ii.h>
 #include  <stm32f4xx.h>
+#include "stm32f4xx_exti.h"
 
 /*
 *********************************************************************************************************
@@ -551,3 +552,28 @@ void OS_CPU_SysTickInit(INT32U ticksPerSec)
     SysTick_Config(RCC_ClocksStatus.HCLK_Frequency / OS_TICKS_PER_SEC);
 }
 
+/*
+*********************************************************************************************************
+*                                          ExternalInterrupt
+*
+*********************************************************************************************************
+*/
+
+void GetTouchPoint();
+
+void EXTI4IrqHandler(void)
+{
+    OS_CPU_SR  cpu_sr;
+
+    OS_ENTER_CRITICAL();
+    OSIntNesting++;
+    
+    EXTI_ClearITPendingBit(EXTI_Line4);
+    NVIC_ClearPendingIRQ(EXTI4_IRQn);
+    
+    GetTouchPoint();
+    
+    OS_EXIT_CRITICAL();    
+
+    OSIntExit();         // Tell uC/OS-II that we are leaving the ISR
+}

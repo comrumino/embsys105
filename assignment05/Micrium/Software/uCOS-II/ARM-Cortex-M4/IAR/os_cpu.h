@@ -184,6 +184,9 @@ void  OSStartHighRdy         (void);
                                                   /* See OS_CPU_C.C                                    */
 void  OS_CPU_SysTickHandler  (void);
 void  OS_CPU_SysTickInit     (INT32U ticksPerSec);
+void  EXTI4IrqHandler         (void);
+void GetTouchPoint(void);
+
 
 #if (OS_CPU_ARM_FP_EN > 0u)
 void  OS_CPU_FP_Reg_Push     (OS_STK   *stkPtr);

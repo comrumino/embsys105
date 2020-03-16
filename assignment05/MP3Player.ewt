@@ -2563,6 +2563,12 @@
                     <name>$PROJ_DIR$\BSP\ST\StdPeripheralDrivers\stm32f4xx_conf.h</name>
                 </file>
                 <file>
+                    <name>$PROJ_DIR$\BSP\ST\StdPeripheralDrivers\stm32f4xx_exti.c</name>
+                </file>
+                <file>
+                    <name>$PROJ_DIR$\BSP\ST\StdPeripheralDrivers\stm32f4xx_exti.h</name>
+                </file>
+                <file>
                     <name>$PROJ_DIR$\BSP\ST\StdPeripheralDrivers\stm32f4xx_gpio.c</name>
                 </file>
                 <file>
@@ -2585,6 +2591,12 @@
                 </file>
                 <file>
                     <name>$PROJ_DIR$\BSP\ST\StdPeripheralDrivers\stm32f4xx_spi.h</name>
+                </file>
+                <file>
+                    <name>$PROJ_DIR$\BSP\ST\StdPeripheralDrivers\stm32f4xx_syscfg.c</name>
+                </file>
+                <file>
+                    <name>$PROJ_DIR$\BSP\ST\StdPeripheralDrivers\stm32f4xx_syscfg.h</name>
                 </file>
                 <file>
                     <name>$PROJ_DIR$\BSP\ST\StdPeripheralDrivers\stm32f4xx_usart.c</name>
