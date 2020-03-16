@@ -165,8 +165,8 @@ ResetIrqHandler
       
 
       CPSID     I                               ; disable all interrupts
-//      LDR     R0, =SystemInit
-//      BLX     R0
+      LDR     R0, =SystemInit
+      BLX     R0
       LDR     R0, =__iar_program_start  ; <- this will do the zero init and init data.
       BX R0
       
